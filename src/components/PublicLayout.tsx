@@ -99,18 +99,6 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <span className="material-symbols-outlined text-[18px]">info</span>
               <span>Company</span>
             </Link>
-            <Link to="#" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:bg-slate-100 transition-all text-sm font-medium">
-              <span className="material-symbols-outlined text-[18px]">view_carousel</span>
-              <span>Collection</span>
-            </Link>
-            <Link to="#" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:bg-slate-100 transition-all text-sm font-medium">
-              <span className="material-symbols-outlined text-[18px]">perm_media</span>
-              <span>Media</span>
-            </Link>
-            <Link to="#" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:bg-slate-100 transition-all text-sm font-medium">
-              <span className="material-symbols-outlined text-[18px]">support_agent</span>
-              <span>Customer Support</span>
-            </Link>
           </nav>
 
         </aside>
