@@ -104,7 +104,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         <div className="col-span-2 lg:col-span-1 flex flex-col gap-3">
           <Link to="#" className="text-sm text-slate-900 underline transition-colors duration-200">Customer Service</Link>
           <Link to="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors duration-200">FAQ</Link>
-          <Link to="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors duration-200">Contact Us</Link>
+          <Link to="/admin/login" className="text-sm text-slate-500 hover:text-slate-900 transition-colors duration-200">Console</Link>
         </div>
         <div className="col-span-2 lg:col-span-1 flex flex-col gap-3">
           <Link to="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors duration-200">Terms of Use</Link>

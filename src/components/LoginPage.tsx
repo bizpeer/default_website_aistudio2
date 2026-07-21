@@ -1,14 +1,101 @@
-import { FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from './ui/Input';
+
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 export function LoginPage() {
   const navigate = useNavigate();
 
-  const handleSubmit = (e: FormEvent) => {
+  const [userId, setUserId] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Password reset modal state
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [isSubmittingModal, setIsSubmittingModal] = useState(false);
+
+  const validatePasswordStrength = (pwd: string) => {
+    // 6자리 이상, 영문, 숫자, 특수문자 조합
+    const hasMinLength = pwd.length >= 6;
+    const hasLetter = /[A-Za-z]/.test(pwd);
+    const hasNumber = /\d/.test(pwd);
+    const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
+    return hasMinLength && hasLetter && hasNumber && hasSpecial;
+  };
+
+  const handleLoginSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    navigate('/admin/dashboard');
+    setErrorMessage('');
+
+    if (userId.trim() !== 'siteadmin') {
+      setErrorMessage('아이디 또는 비밀번호가 올바르지 않습니다.');
+      return;
+    }
+
+    const isPasswordChanged = localStorage.getItem('isPasswordChanged') === 'true';
+    const storedHash = localStorage.getItem('admin_password_hash');
+
+    if (!isPasswordChanged) {
+      // 최초 또는 임시 비밀번호 상태
+      if (password === '!admin1004') {
+        // 임시 비밀번호 로그인 성공 -> 강제 비밀번호 변경 모달 팝업
+        setShowResetModal(true);
+      } else {
+        setErrorMessage('아이디 또는 비밀번호가 올바르지 않습니다.');
+      }
+    } else {
+      // 비밀번호가 변경된 정식 상태 -> SHA-256 해시 검증
+      const inputHash = await hashPassword(password);
+      if (storedHash && inputHash === storedHash) {
+        localStorage.setItem('admin_logged_in', 'true');
+        navigate('/admin/dashboard');
+      } else {
+        setErrorMessage('아이디 또는 비밀번호가 올바르지 않습니다.');
+      }
+    }
+  };
+
+  const handleForceResetSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setModalError('');
+
+    if (!validatePasswordStrength(newPassword)) {
+      setModalError('비밀번호는 6자리 이상의 영문, 숫자, 특수기호 조합이어야 합니다.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setModalError('새 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    setIsSubmittingModal(true);
+    try {
+      // Subtle Crypto API SHA-256 암호화
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // LocalStorage에 해시값 및 변경 플래그 저장
+      localStorage.setItem('admin_password_hash', hashedPassword);
+      localStorage.setItem('isPasswordChanged', 'true');
+      localStorage.setItem('admin_logged_in', 'true');
+
+      setShowResetModal(false);
+      navigate('/admin/dashboard');
+    } catch (err) {
+      setModalError('비밀번호 암호화 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmittingModal(false);
+    }
   };
 
   return (
@@ -33,12 +120,18 @@ export function LoginPage() {
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzdKFsdPnKcTZgizNUKNAQm4C7c0rxBrNMlB3K5hpuP-ZtI39somkJYvZ44418CAGbL_oNOOYdt8XvN0xntUda3uvRiJ7ClsESuUvSTvxQunbLKo_chpYgvscwiltagl-nk3eNRXa02lkJl6B4_pZWgWYXcljNDFz49O07dhycfXCfTqEtc38vlmTd0bJKETS9M_mviIM6bAh3DgLQkcfOqeoWpGwIjzFuMVamK28DEASUmEFHTskKTA" 
               />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-primary text-center">Company CMS</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-primary text-center">Console CMS</h1>
             <p className="text-sm font-normal text-on-surface-variant text-center mt-1">Secure Back-office Access</p>
           </div>
 
           {/* Form Body */}
-          <form className="p-6 flex flex-col gap-5" onSubmit={handleSubmit}>
+          <form className="p-6 flex flex-col gap-5" onSubmit={handleLoginSubmit}>
+            {errorMessage && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 font-medium">
+                {errorMessage}
+              </div>
+            )}
+
             {/* ID Field */}
             <div className="flex flex-col gap-2">
               <label htmlFor="userId" className="text-sm font-semibold text-on-surface">ID</label>
@@ -46,7 +139,9 @@ export function LoginPage() {
                 id="userId"
                 name="userId"
                 type="text"
-                placeholder="Enter your employee ID"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                placeholder="관리자 아이디 입력"
                 icon="badge"
               />
             </div>
@@ -58,7 +153,9 @@ export function LoginPage() {
                 id="password"
                 name="password"
                 type="password"
-                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호 입력"
                 icon="lock"
               />
             </div>
@@ -97,11 +194,69 @@ export function LoginPage() {
           <div className="bg-surface px-6 py-3 border-t border-outline-variant/30 flex justify-center">
             <span className="text-[11px] font-medium text-outline flex items-center gap-1.5">
               <span className="material-symbols-outlined text-[14px]">security</span>
-              End-to-end encrypted connection
+              SHA-256 Web Crypto Encrypted Session
             </span>
           </div>
         </div>
       </div>
+
+      {/* Force Password Reset Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-200">
+            <div className="flex items-center gap-3 mb-4 text-amber-600">
+              <span className="material-symbols-outlined text-3xl">warning</span>
+              <h2 className="text-xl font-bold text-slate-900">비밀번호 변경 강제 (Force Reset)</h2>
+            </div>
+            
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              최초 임시 비밀번호로 로그인하셨습니다. 보안 강화를 위해 **안전한 새 비밀번호**를 설정해야 콘솔 대시보드 접근이 가능합니다.
+            </p>
+
+            <form onSubmit={handleForceResetSubmit} className="space-y-4">
+              {modalError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 font-medium">
+                  {modalError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">새 비밀번호</label>
+                <input 
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="6자리 이상 영문/숫자/특수기호 조합"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-800 transition-colors"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">새 비밀번호 확인</label>
+                <input 
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="새 비밀번호 다시 입력"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-800 transition-colors"
+                  required
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmittingModal}
+                  className="w-full py-3 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-md disabled:opacity-50"
+                >
+                  {isSubmittingModal ? 'SHA-256 암호화 저장 중...' : '비밀번호 변경 및 콘솔 입장'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
