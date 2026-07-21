@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 interface PublicLayoutProps {
   children: ReactNode;
@@ -7,6 +7,7 @@ interface PublicLayoutProps {
 
 export function PublicLayout({ children }: PublicLayoutProps) {
   const [showShoppingMall, setShowShoppingMall] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     const savedShowMall = localStorage.getItem('show_shopping_mall');
@@ -15,25 +16,31 @@ export function PublicLayout({ children }: PublicLayoutProps) {
     }
   }, []);
 
+  const isShopPage = location.pathname === '/';
+
   return (
     <div className="text-slate-900 font-sans antialiased min-h-screen flex flex-col bg-[#fbf9f6]">
       {/* TopAppBar */}
-      <header className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 transition-colors duration-300">
+      <header className="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs transition-all duration-300">
         <div className="flex justify-between items-center px-5 md:px-10 py-4 w-full max-w-[1440px] mx-auto">
           
           <nav className="hidden md:flex gap-6 items-center">
+            <Link to="/company" className={`text-sm font-medium transition-colors duration-300 ${location.pathname === '/company' ? 'text-slate-900 font-bold border-b-2 border-slate-900 pb-0.5' : 'text-slate-600 hover:text-slate-900'}`}>Company</Link>
+            <Link to="/company?tab=ceo" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors duration-300">Brand</Link>
+            <Link to="/company?tab=contact" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors duration-300">Media Center</Link>
             {showShoppingMall && (
-              <Link to="/" className="text-sm font-medium text-slate-900 border-b border-slate-900 pb-1">Shop</Link>
+              <Link to="/" className={`text-sm font-medium transition-colors duration-300 ${isShopPage ? 'text-slate-900 font-bold border-b-2 border-slate-900 pb-0.5' : 'text-slate-600 hover:text-slate-900'}`}>Shop</Link>
             )}
-            <Link to="#" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors duration-300">Brand Story</Link>
-            <Link to="/company" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors duration-300">Company</Link>
-            <Link to="#" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors duration-300">Collection</Link>
-            <Link to="#" className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors duration-300">Event</Link>
           </nav>
           
-          <div className="flex-1 flex justify-center md:justify-center justify-start">
-            <Link to="/" className="text-2xl font-serif tracking-widest text-slate-900">
-              BEAUTY OF JOSEON
+          <div className="flex-1 flex justify-center items-center gap-3">
+            <Link to="/" className="flex items-center gap-2 group">
+              <span className="text-2xl font-serif tracking-widest text-slate-900 group-hover:opacity-80 transition-opacity">
+                BEAUTY OF JOSEON
+              </span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                Company Home
+              </span>
             </Link>
           </div>
           
@@ -45,66 +52,45 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>person</span>
             </Link>
             {showShoppingMall && (
-              <Link to="#" className="hover:text-slate-500 transition-colors duration-300 flex items-center justify-center">
+              <Link to="/" className="hover:text-slate-500 transition-colors duration-300 flex items-center justify-center">
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>shopping_bag</span>
               </Link>
             )}
           </div>
         </div>
-      </header>
 
-      {/* SideNavBar & Main Content Wrapper */}
-      <div className="flex flex-1 pt-[73px]">
-        {/* SideNavBar - Based on Dev Document (Shop & Company) */}
-        <aside className="bg-white border-r border-slate-200 fixed left-0 top-0 h-screen pt-24 px-6 z-40 w-64 hidden lg:flex flex-col overflow-y-auto">
-          
-          <div className="mb-8">
-            <h2 className="text-2xl font-serif text-slate-900 mb-2">Navigation</h2>
-            <p className="text-sm text-slate-500">Beauty of Joseon</p>
-          </div>
-
-          {showShoppingMall && (
-            <nav className="flex flex-col gap-1 mb-8">
-              <h3 className="text-xs font-bold text-slate-900 px-4 mb-2 uppercase tracking-widest">Shop</h3>
-              <Link to="#" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:bg-slate-100 transition-all text-sm font-medium">
+        {/* Header Shop Sub-Menu (Triggered on Shop Page access) */}
+        {showShoppingMall && isShopPage && (
+          <div className="bg-slate-50/90 border-t border-slate-200 px-5 md:px-10 py-2.5">
+            <div className="max-w-[1440px] mx-auto flex items-center justify-center gap-6 md:gap-10 overflow-x-auto text-xs md:text-sm font-medium">
+              <Link to="#" className="flex items-center gap-1.5 text-slate-700 hover:text-slate-900 transition-colors whitespace-nowrap">
                 <span className="material-symbols-outlined text-[18px]">category</span>
                 <span>제품 카테고리</span>
               </Link>
-              <Link to="#" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-900 bg-slate-100 font-bold transition-all text-sm">
+              <Link to="#" className="flex items-center gap-1.5 text-slate-900 font-bold transition-colors whitespace-nowrap">
                 <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                 <span>베스트 셀러</span>
               </Link>
-              <Link to="#" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:bg-slate-100 transition-all text-sm font-medium">
+              <Link to="#" className="flex items-center gap-1.5 text-slate-700 hover:text-slate-900 transition-colors whitespace-nowrap">
                 <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
                 <span>장바구니</span>
               </Link>
-              <Link to="#" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:bg-slate-100 transition-all text-sm font-medium">
+              <Link to="#" className="flex items-center gap-1.5 text-slate-700 hover:text-slate-900 transition-colors whitespace-nowrap">
                 <span className="material-symbols-outlined text-[18px]">receipt_long</span>
                 <span>주문 / 결제</span>
               </Link>
-              <Link to="#" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:bg-slate-100 transition-all text-sm font-medium">
+              <Link to="#" className="flex items-center gap-1.5 text-slate-700 hover:text-slate-900 transition-colors whitespace-nowrap">
                 <span className="material-symbols-outlined text-[18px]">account_circle</span>
                 <span>마이페이지</span>
               </Link>
-            </nav>
-          )}
+            </div>
+          </div>
+        )}
+      </header>
 
-          <nav className="flex flex-col gap-1 pb-8">
-            <h3 className="text-xs font-bold text-slate-900 px-4 mb-2 uppercase tracking-widest">Company</h3>
-            <Link to="#" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:bg-slate-100 transition-all text-sm font-medium">
-              <span className="material-symbols-outlined text-[18px]">auto_stories</span>
-              <span>Brand Story</span>
-            </Link>
-            <Link to="/company" className="flex items-center gap-3 px-4 py-2.5 rounded-md text-slate-600 hover:bg-slate-100 transition-all text-sm font-medium">
-              <span className="material-symbols-outlined text-[18px]">info</span>
-              <span>Company</span>
-            </Link>
-          </nav>
-
-        </aside>
-
-        {/* Main Canvas */}
-        <main className="flex-1 lg:ml-64 w-full max-w-[1440px] mx-auto px-5 md:px-10 pb-16">
+      {/* Main Content Wrapper (Sidebar hidden completely) */}
+      <div className={`flex flex-1 ${isShopPage && showShoppingMall ? 'pt-[125px]' : 'pt-[73px]'}`}>
+        <main className="flex-1 w-full max-w-[1440px] mx-auto px-5 md:px-10 pb-16">
           {children}
         </main>
       </div>
